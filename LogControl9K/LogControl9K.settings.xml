@@ -1,0 +1,13 @@
+<?xml version='1.0'?>        
+<Settings>
+	<Setting Id="Folder" Value="logs"/>
+	<Setting Id="DateTimeFormat" Value="HH:mm:ss.fff"/>
+	<Setting Id="IsWritingToFileEnabled" Value="false"/>
+	<Setting Id="IsWritingEachTabEnabled" Value="false"/>
+  
+  <Colors>
+    <Color Type="CODE_FLOW">#666666</Color> 
+    <Color Type="ERROR">Red</Color> 
+    <Color Type="CRITICAL_ERROR">DarkRed</Color> 
+  </Colors>
+</Settings>

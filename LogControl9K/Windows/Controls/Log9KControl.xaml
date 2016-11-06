@@ -1,0 +1,588 @@
+﻿<UserControl x:Class="LogControl9K.Windows.Controls.Log9KControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:LogControl9K.Windows.Controls"
+             xmlns:logControl9K="clr-namespace:LogControl9K"
+             xmlns:viewModels="clr-namespace:LogControl9K.Windows.Controls.ViewModels"
+             TextOptions.TextFormattingMode ="Display"
+             Background="White">
+    <UserControl.DataContext>
+        <viewModels:Log9KControlViewModel />
+    </UserControl.DataContext>
+    <UserControl.InputBindings>
+        <KeyBinding Key="G" Modifiers="Control" Command="{Binding FocusStartFromIDCommand}"></KeyBinding>
+        <KeyBinding Key="T" Modifiers="Control" Command="{Binding FocusStartTimeFilterCommand}"></KeyBinding>
+        <KeyBinding Key="H" Modifiers="Control" Command="{Binding ShowOrHideDataGridControlsCommand}"></KeyBinding>
+        <KeyBinding Key="D" Modifiers="Control" Command="{Binding ShowOrHideDuplicationsTreeCommand}"></KeyBinding>
+        <KeyBinding Key="L" Modifiers="Control" Command="{Binding ClearDataGridCommand}"></KeyBinding>
+        <KeyBinding Key="N" Modifiers="Control" Command="{Binding SwitchShowLastLogsCommand}"/>
+        <KeyBinding Key="R" Modifiers="Control" Command="{Binding SwitchScrollToLastLogCommand}"/>
+        <KeyBinding Key="PageDown" Modifiers="Control" Command="{Binding SwitchTabToNextCommand}"></KeyBinding>
+        <KeyBinding Key="PageUp" Modifiers="Control" Command="{Binding SwitchTabToPreviousCommand}"></KeyBinding>
+    </UserControl.InputBindings>
+    <UserControl.Resources>
+        <local:TypeToColorConverter x:Key="TypeToColorConverter" />
+        <local:TypeToIconSourceConverter x:Key="TypeToIconSourceConverter" />
+        <local:BindingProxy x:Key="Log9KControlProxy" Data="{Binding}" />
+        <BitmapImage x:Key="SaveImage" UriSource="img/save.png" />
+        <BitmapImage x:Key="CopyImage" UriSource="img/copy.png" />
+        <DataTemplate x:Key="TabTemplate">
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition />
+            <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <TabControl ItemsSource="{Binding LogTabs}" SelectedItem="{Binding CurrentTab}" Name="Log9KTabControl">
+            <TabControl.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <Image Height="15" Width="15"
+                               Source="{Binding Path=TabType, Converter={StaticResource TypeToIconSourceConverter}}" />
+                        <TextBlock Text="{Binding TabHeader}" 
+                                   Foreground="{Binding Converter={StaticResource TypeToColorConverter}}" />
+                    </StackPanel>
+                </DataTemplate>
+            </TabControl.ItemTemplate>
+            <TabControl.ContentTemplate>
+                <DataTemplate>
+                    <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <GridSplitter Grid.Column="0" Width="3" VerticalAlignment="Stretch" DragCompleted="Thumb_OnDragCompleted" IsEnabled="{Binding Path=Data.ShowDuplicationsTree, Source={StaticResource Log9KControlProxy}}"/>
+                    <local:Log9KDataGrid Grid.Column="0" Margin="0 0 4 0"
+                        TextOptions.TextFormattingMode ="Display"
+                        ItemsSource="{Binding Path=Data.LogEntriesCollectionView, Source={StaticResource Log9KControlProxy}}"
+                        SelectedItem="{Binding Path=Data.SelectedEntry, Source={StaticResource Log9KControlProxy}}"
+                        AutoGenerateColumns="False"
+                        IsReadOnly="True"
+                        Name="LogEntriesDataGrid"
+                        CanUserSortColumns="False"
+                        CanUserDeleteRows="False"
+                        CurrentTab="{Binding}"
+                        ScrollToLastLog="{Binding ScrollToLastLog}"
+                        StartRemovingFromBottomCommand="{Binding Path=Data.StartRemovingFromBottomCommand, Source={StaticResource Log9KControlProxy}}"
+                        StartRemovingFromTopCommand="{Binding Path=Data.StartRemovingFromTopCommand, Source={StaticResource Log9KControlProxy}}"
+                        LoadOlderLogCommand="{Binding Path=Data.LoadOlderLogCommand, Source={StaticResource Log9KControlProxy}}"
+                        LoadNewerLogCommand="{Binding Path=Data.LoadNewerLogCommand, Source={StaticResource Log9KControlProxy}}"
+                        SelectLogEntryCommand="{Binding Path=Data.SelectLogEntryCommand, Source={StaticResource Log9KControlProxy}}"
+                        CopyEntriesCommand="{Binding Path=Data.CopyEntriesCommand, Source={StaticResource Log9KControlProxy}}">
+                        <local:Log9KDataGrid.Resources>
+                            <local:BindingProxy x:Key="DataGridProxy"
+                                                Data="{Binding ElementName=LogEntriesDataGrid}" />
+                        </local:Log9KDataGrid.Resources>
+                        <local:Log9KDataGrid.InputBindings>
+                            <KeyBinding Key="PageUp" Modifiers="Shift" CommandParameter="LoadOlderLogArrayCommand"
+                                        Command="{Binding Path=Data.LoadOlderLogArrayCommand, Source={StaticResource Log9KControlProxy}}" />
+                            <KeyBinding Key="PageDown" CommandParameter="LoadNewerLogArrayCommand" Modifiers="Shift" 
+                                        Command="{Binding Path=Data.LoadNewerLogArrayCommand, Source={StaticResource Log9KControlProxy}}" />
+                            
+                            <KeyBinding Key="PageDown" Modifiers="Control" Command="{Binding Path=Data.SwitchTabToNextCommand, Source={StaticResource Log9KControlProxy}}"></KeyBinding>
+                            <KeyBinding Key="PageUp" Modifiers="Control" Command="{Binding Path=Data.SwitchTabToPreviousCommand, Source={StaticResource Log9KControlProxy}}"></KeyBinding>
+                        </local:Log9KDataGrid.InputBindings>
+                        <local:Log9KDataGrid.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Копировать"
+                                          CommandParameter="{Binding Data.SelectedItems, Source={StaticResource DataGridProxy}}"
+                                          Command="{Binding Path=Data.CopyEntriesCommand, Source={StaticResource Log9KControlProxy}}">
+                                    <MenuItem.Icon>
+                                        <Image Source="{StaticResource CopyImage}" Width="22" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Сохранить..."
+                                          CommandParameter="{Binding Path=Data.SelectedItems, Source={StaticResource DataGridProxy}}"
+                                          Command="{Binding Path=Data.SaveEntriesCommand, Source={StaticResource Log9KControlProxy}}">
+                                    <MenuItem.Icon>
+                                        <Image Source="{StaticResource SaveImage}" Width="22" />
+                                    </MenuItem.Icon>
+                                </MenuItem>
+                                <MenuItem Header="Очистить таблицу (Ctrl+L)"
+                                          Command="{Binding Path=Data.ClearDataGridCommand, Source={StaticResource Log9KControlProxy}}">
+                                </MenuItem>
+                            </ContextMenu>
+                        </local:Log9KDataGrid.ContextMenu>
+                        <local:Log9KDataGrid.RowStyle>
+                            <Style TargetType="DataGridRow">
+                                <Style.Triggers>
+                                    <DataTrigger Value="True" Binding="{Binding Path=Data.IsAllTabCurrent, Source={StaticResource Log9KControlProxy}}">
+                                        <Setter Property="Foreground" Value="{Binding Converter={StaticResource TypeToColorConverter}}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </local:Log9KDataGrid.RowStyle>
+                        <local:Log9KDataGrid.Columns>
+                            <DataGridTextColumn Header="ID" Binding="{Binding ID}" />
+                            <DataGridTextColumn Header="Тип" Binding="{Binding TypeString}" FontWeight="Bold" />
+                            <DataGridTextColumn Header="Время" Binding="{Binding Time}" />
+                            <DataGridTemplateColumn Header="Сообщение" ClipboardContentBinding="{Binding Message}">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="          ">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Level}"
+                                                                         Value="{x:Static logControl9K:Levels.PRIMARY}">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding Message}" >
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                            <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsMessageLong}" Value="True">
+                                                                <Setter Property="ToolTip" Value="{Binding Message}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style> 
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </local:Log9KDataGrid.Columns>
+                    </local:Log9KDataGrid>
+                    <TreeView Grid.Column="1" ItemsSource="{Binding DuplicationsCollection}" IsVisibleChanged="UIElement_OnIsVisibleChanged">
+                        <TreeView.Style>
+                            <Style TargetType="TreeView">
+                                <Style.Triggers>
+                                    <DataTrigger
+                                        Binding="{Binding Path=Data.ShowDuplicationsTree, Source={StaticResource Log9KControlProxy}}"
+                                        Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TreeView.Style>
+                        <TreeView.ItemTemplate>
+                            <HierarchicalDataTemplate ItemsSource="{Binding Item2}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Item1.TypeString}" FontWeight="Bold"
+                                               Foreground="White">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Background"
+                                                        Value="{Binding Path=Item1.Type, Converter={StaticResource TypeToColorConverter}}" />
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                    <TextBlock Text=" " />
+
+                                    <TextBlock Text="{Binding Item1.Message}" />
+                                    <TextBlock Text=" " />
+
+                                    <TextBlock Text="(" FontWeight="Bold" />
+                                    <TextBlock Text="{Binding Item2.Count}" FontWeight="Bold" />
+                                    <TextBlock Text=")" FontWeight="Bold" />
+                                </StackPanel>
+                                <HierarchicalDataTemplate.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel Orientation="Horizontal">
+                                            <StackPanel.InputBindings>
+                                                <MouseBinding MouseAction="LeftDoubleClick"
+                                                              Command="{Binding Path=Data.LoadStartingFromIDCommand, Source={StaticResource Log9KControlProxy}}"
+                                                              CommandParameter="{Binding Path=Item2}" />
+                                            </StackPanel.InputBindings>
+                                            <TextBlock Text="{Binding Path=Item1}" />
+                                            <TextBlock Margin="5,0,0,0">ID:</TextBlock>
+                                            <TextBlock Text="{Binding Path=Item2}" FontWeight="Heavy"
+                                                       FontStyle="Oblique" />
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </HierarchicalDataTemplate.ItemTemplate>
+                            </HierarchicalDataTemplate>
+                        </TreeView.ItemTemplate>
+                    </TreeView>
+                </Grid>
+                <Button Height="Auto" FontSize="10" Grid.Row="1"
+                        Command="{Binding Path=Data.ShowOrHideDataGridControlsCommand, Source={StaticResource Log9KControlProxy}}" Content="v^ (Ctrl+H)"/>
+                <Grid Grid.Row="2">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Style.Triggers>
+                                <DataTrigger
+                                    Binding="{Binding Path=Data.ShowDataGridControls, Source={StaticResource Log9KControlProxy}}"
+                                    Value="False">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <Border BorderThickness="1" BorderBrush="Black">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <StackPanel Orientation="Horizontal">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Style.Triggers>
+                                                <DataTrigger
+                                                    Binding="{Binding Data.IsAllTabCurrent, Source={StaticResource Log9KControlProxy}}"
+                                                    Value="False">
+                                                    <Setter Property="IsEnabled" Value="False" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Label>Перейти к логу с ID: (Ctrl+G)</Label>
+                                        <TextBox Name="StartFromIDTextBox" Width="69"
+                                                 logControl9K:FocusExtension.IsFocused="{Binding Data.IsStartFromIDTextBoxFocused, Source={StaticResource Log9KControlProxy}}"
+                                                 Text="{Binding Data.StartFromIDText, Source={StaticResource Log9KControlProxy}}">
+                                            <TextBox.InputBindings>
+                                                <KeyBinding
+                                                    Command="{Binding Path=Data.LoadStartingFromIDCommand, Source={StaticResource Log9KControlProxy}}"
+                                                    CommandParameter="{Binding ElementName=StartFromIDTextBox, Path=Text}"
+                                                    Key="Return" />
+                                            </TextBox.InputBindings>
+                                        </TextBox>
+                                        <Button Margin="3"
+                                                Command="{Binding Path=Data.LoadStartingFromIDCommand, Source={StaticResource Log9KControlProxy}}"
+                                                CommandParameter="{Binding ElementName=StartFromIDTextBox, Path=Text}">
+                                            Перейти
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal">
+                                    <Label>Фильтрация по времени: (Ctrl+T)</Label>
+                                    <Label>С</Label>
+                                    <TextBox Margin="5,3" Width="88"
+                                             Text="{Binding Path=Data.FilterTimeStart, Source={StaticResource Log9KControlProxy}}"
+                                             logControl9K:FocusExtension.IsFocused="{Binding Path=Data.IsStartTimeFilterFocused, Source={StaticResource Log9KControlProxy}}">
+                                        <TextBox.InputBindings>
+                                            <KeyBinding Key="Return"
+                                                        Command="{Binding Path=Data.FocusEndTimeFilterCommand, Source={StaticResource Log9KControlProxy}}" />
+                                        </TextBox.InputBindings> 
+                                    </TextBox>
+                                    <Label>По</Label>
+                                    <TextBox Margin="5,3" Width="88" Name="TimeEndTextBox"
+                                             Text="{Binding Path=Data.FilterTimeEnd, Source={StaticResource Log9KControlProxy}}"
+                                             logControl9K:FocusExtension.IsFocused="{Binding Path=Data.IsEndTimeFilterFocused, Source={StaticResource Log9KControlProxy}}">
+                                        <TextBox.InputBindings>
+                                            <KeyBinding Key="Return"
+                                                        Command="{Binding Path=Data.FilterByTimeCommand, Source={StaticResource Log9KControlProxy}}"
+                                                        CommandParameter="{Binding ElementName=TimeEndTextBox, Path=Text }" />
+                                        </TextBox.InputBindings>
+                                    </TextBox>
+                                    <Button Margin="5,3,0,3"
+                                            Command="{Binding Path=Data.FilterByTimeCommand, Source={StaticResource Log9KControlProxy}}">
+                                        Применить
+                                    </Button>
+                                    <Button Margin="3"
+                                            Command="{Binding Path=Data.CancelFilterByTimeCommand, Source={StaticResource Log9KControlProxy}}" Content="Отменить">
+                                        <Button.Style>
+                                            <Style TargetType="Button">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Path=Data.IsAllTabCurrent, Source={StaticResource Log9KControlProxy}}" Value="True">
+                                                        <Setter Property="Visibility" Value="Hidden"></Setter>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Button.Style> 
+                                    </Button>
+                                </StackPanel>
+                            </StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left">
+                                    <CheckBox Margin="3,0" IsChecked="{Binding ScrollToLastLog}" Content="Автопрокрутка (Ctrl+R)">
+                                        <CheckBox.Style>
+                                            <Style TargetType="CheckBox">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsChecked" Value="True">
+                                                        <Setter Property="Foreground" Value="Red" />
+                                                        <Setter Property="FontWeight" Value="Bold" />
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </CheckBox.Style>
+                                        <CheckBox.ToolTip>
+                                            <TextBlock>Прокручивать к самому новому логу при добавлении</TextBlock>
+                                        </CheckBox.ToolTip>
+                                    </CheckBox>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Left">
+                                    <StackPanel.Style>
+                                        <Style TargetType="StackPanel">
+                                            <Style.Triggers>
+                                                <DataTrigger
+                                                    Binding="{Binding Data.IsAllTabCurrent, Source={StaticResource Log9KControlProxy}}"
+                                                    Value="False">
+                                                    <Setter Property="Visibility" Value="Hidden" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </StackPanel.Style>
+                                    <CheckBox
+                                        Margin="3,0"
+                                        Command="{Binding Path=Data.ShowLastLogsCommand, Source={StaticResource Log9KControlProxy}}"
+                                        CommandParameter="{Binding ElementName=ShowLastLogsCheckBox, Path=IsChecked}"
+                                        Content="Показывать новые логи (Ctrl+N)"
+                                        IsChecked="{Binding Path=Data.CurrentTab.IsAddingNewestEntries, Source={StaticResource Log9KControlProxy}}"
+                                        Name="ShowLastLogsCheckBox" >
+                                        <CheckBox.Style>
+                                            <Style TargetType="CheckBox">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsChecked" Value="True">
+                                                        <Setter Property="Foreground" Value="Red" />
+                                                        <Setter Property="FontWeight" Value="Bold" />
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </CheckBox.Style>
+                                        <CheckBox.ToolTip>
+                                            <StackPanel>
+                                                <TextBlock>Добавлять ли в таблицу новые логи</TextBlock>
+                                                <TextBlock>При повторном включении заполнит таблицу самыми последними логами</TextBlock>
+                                                <TextBlock Foreground="Red">ВНИМАНИЕ: если этот чекбокс включен и количество строк в таблице превышает заданную константу</TextBlock>
+                                                <TextBlock Foreground="Red">(ограничивающаую размеры таблицы), то при добавлении логов начнётся неконтролируемая прокрутка</TextBlock>
+                                            </StackPanel>
+                                        </CheckBox.ToolTip>
+                                    </CheckBox>
+                                    <TextBlock Margin="3,0" Text="Количество подгружаемых логов:"
+                                               MouseLeftButtonDown="Control_OnMouse">
+                                        <TextBlock.ToolTip>
+                                            <StackPanel>
+                                                <TextBlock>Сколько логов подгружать из файла при нажатии </TextBlock>
+                                                <TextBlock>Shift + Page UP/DOWN</TextBlock>
+                                            </StackPanel>
+                                        </TextBlock.ToolTip>
+                                    </TextBlock>
+                                    <TextBox Height="18" Width="42" FontSize="10"
+                                             Text="{Binding Path=Data.PageUpDownToLoad, Source={StaticResource Log9KControlProxy}}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" HorizontalAlignment="Right" Orientation="Horizontal">
+                                    <CheckBox
+                                        IsChecked="{Binding Path=Data.ShowDuplicationsTree, Source={StaticResource Log9KControlProxy}}">
+                                        Показывать дерево повторов (Ctrl+D)
+                                    </CheckBox>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+                </Grid>
+                </DataTemplate>
+            </TabControl.ContentTemplate>
+        </TabControl>
+        <Grid Grid.Column="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <Button Content="{Binding SettingsButtonContent}" Command="{Binding ShowOrHideSettingsCommand}">
+                <Button.ToolTip>
+                    <TextBlock>Показать/скрыть настройки</TextBlock>
+                </Button.ToolTip>
+            </Button>
+            <Grid Grid.Column="1">
+                <GroupBox Header="Настройки" Padding="3" Height="Auto" VerticalAlignment="Top">
+                    <GroupBox.Style>
+                        <Style TargetType="GroupBox">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ShowSettings}" Value="False">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </GroupBox.Style>
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <GroupBox Header="Сохранение в файл" Padding="7">
+                                    <StackPanel>
+                                        <Grid >
+                                            <Label>Папка:</Label>
+                                            <TextBox Width="160" HorizontalAlignment="Right" LostFocus="FolderTextBox_OnLostFocus" Text="{Binding Settings.Folder}">
+                                            </TextBox>
+                                        </Grid>
+                                        <CheckBox Margin="3" IsChecked="{Binding Settings.IsWritingToFileEnabled}">Сохранять в файл</CheckBox>
+                                        <TextBox HorizontalAlignment="Stretch" Height="80" Width="228"
+                                                 TextWrapping="Wrap"
+                                                 Text="{Binding TabAll.FilenameLogFile, Mode=OneWay}"
+                                                 VerticalAlignment="Top"
+                                                 IsReadOnly="True" UndoLimit="0" />
+                                        <CheckBox Margin="3" IsChecked="{Binding Settings.IsWritingEachTabEnabled}"
+                                                  Name="SaveEachTabCheckBox">
+                                            Сохранять в файл для каждой вкладки
+                                        </CheckBox>
+                                        <StackPanel>
+                                            <StackPanel.Style>
+                                                <Style TargetType="StackPanel">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger
+                                                            Binding="{Binding Path=IsChecked, ElementName=SaveEachTabCheckBox}"
+                                                            Value="True">
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </StackPanel.Style>
+                                            <Label> Для текущей вкладки:</Label>
+                                            <TextBox HorizontalAlignment="Stretch" Height="80" Width="228"
+                                                     TextWrapping="Wrap"
+                                                     Text="{Binding CurrentTab.FilenameLogFile}"
+                                                     VerticalAlignment="Top"
+                                                     IsReadOnly="True" UndoLimit="0" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </GroupBox>
+                            </StackPanel>
+                            <Grid Grid.Column="1">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition />
+                                </Grid.RowDefinitions>
+                                <StackPanel>
+                                    <GroupBox Header="Цвета" Padding="7">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition />
+                                                <RowDefinition />
+                                            </Grid.RowDefinitions>
+                                            <Grid>
+                                                
+                                            <StackPanel Orientation="Horizontal" Margin="2">
+                                                <ComboBox ItemsSource="{Binding LogEntryTypes}" SelectedIndex="0" SelectedItem="{Binding SelectedTypeForColor}"
+                                                          Width="150"
+                                                          Name="LogEntryTypeComboBox" />
+                                                <Label Background="{Binding Path=Text, ElementName=ColorTextBox}"
+                                                       Width="30" />
+                                                <TextBox Name="ColorTextBox"
+                                                         Text="{Binding Path=SelectedTypeForColor, Converter={StaticResource TypeToColorConverter}, Mode=OneWay}"
+                                                         Width="69" UndoLimit="3" />
+                                            </StackPanel>
+                                            <Button Margin="3" HorizontalAlignment="Right" Command="{Binding ChangeColorCommand}" CommandParameter="{Binding ElementName=ColorTextBox, Path=Text}">Изменить</Button>
+                                            </Grid>
+                                            <Grid Grid.Row="1">
+                                                <Button Margin="3" Width="Auto" HorizontalAlignment="Right" Content="Цвета по умолчанию" Command="{Binding DefaultColorsCommand}"/>
+                                            </Grid>
+                                        </Grid>
+                                    </GroupBox>
+                                    <GroupBox Header="Другое" Padding="7">
+                                        <StackPanel>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <Label Width="Auto" Grid.Column="0">
+                                                    <Label.ToolTip>
+                                                        <StackPanel>
+                                                            <TextBlock>DateTime Format String</TextBlock>
+                                                            <TextBlock>Форматирующая строка, используемая для вывода времени в таблице логов</TextBlock>
+                                                        </StackPanel>
+                                                    </Label.ToolTip>
+                                                    Формат даты и времени</Label>
+                                                <TextBox Margin="3" Width="128" Grid.Column="1"
+                                                         Text="{Binding Settings.DateTimeFormat}" />
+                                                <Button Margin="3" Width="Auto" Grid.Column="2">Применить</Button>
+                                            </Grid>
+                                            <CheckBox Margin="3" Command="{Binding IsInnerLogVisibleCommand}" CommandParameter="{Binding RelativeSource={RelativeSource Self}, Path=IsChecked}" >
+                                                Отображать вкладку с логами контрола
+                                            </CheckBox>
+                                        </StackPanel>
+                                    </GroupBox>
+                                </StackPanel>
+
+                            </Grid>
+
+                        </Grid>
+                        <Grid Grid.Row="1">
+                            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
+                                <Button Margin="3" Content="Горячие клавиши..." Click="Button_Click"/>
+                                <Button Margin="3" Content="Загрузить" Command="{Binding LoadSettingsCommand}">
+                                    <Button.ToolTip>
+                                        <TextBlock Text="Загрузить настройки из файла"/> 
+                                    </Button.ToolTip>
+                                    </Button>
+                                <Button Margin="3" Content="Сохранить" Command="{Binding SaveSettingsCommand}">
+                                    <Button.ToolTip>
+                                        <TextBlock Text="Сохранить настройки в файл"/> 
+                                    </Button.ToolTip>
+                                </Button>
+                            </StackPanel> 
+                        </Grid>
+                        <Grid Grid.Row="2" VerticalAlignment="Bottom" HorizontalAlignment="Right">
+                            <Grid.Style>
+                                <Style TargetType="Grid">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsDebug}" Value="False">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Grid.Style>
+
+                            <StackPanel Orientation="Horizontal">
+                                <Label
+                                    Foreground="White"
+                                    Background="{Binding CurrentTab.TabType, Converter={StaticResource TypeToColorConverter}}"
+                                    BorderBrush="{Binding CurrentTab.TabType, Converter={StaticResource TypeToColorConverter}}"
+                                    BorderThickness="3"
+                                    Width="Auto"
+                                    Margin="3,0">
+                                    <Label.Style>
+                                        <Style TargetType="Label">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsAllTabCurrent}"
+                                                             Value="True">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Label.Style>
+                                    <StackPanel Orientation="Horizontal" Width="Auto">
+                                        <TextBlock FontWeight="Bold"
+                                                   Text="{Binding Path=CurrentTab.TabTypeString}" />
+                                        <TextBlock>:</TextBlock>
+                                        <TextBlock Margin="3,0"
+                                                   Text="{Binding Path=CurrentTab.LogEntryCollection.Count}" />
+                                    </StackPanel>
+                                </Label>
+                                <Label Margin="3,0" Foreground="Black" Background="White" BorderThickness="3"
+                                       BorderBrush="Black" Width="Auto">
+                                    <StackPanel Orientation="Horizontal" Width="Auto">
+                                        <TextBlock FontWeight="Bold">ALL:</TextBlock>
+                                        <TextBlock Margin="3,0"
+                                                   Text="{Binding Path=TabAll.LogEntryCollection.Count}" />
+                                    </StackPanel>
+                                </Label>
+                            </StackPanel>
+                        </Grid>
+                    </Grid>
+                </GroupBox>
+
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

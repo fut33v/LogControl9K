@@ -1,0 +1,13 @@
+<?xml version='1.0'?>        
+<Settings>
+	<Setting Id="Folder" Value="666"/>
+	<Setting Id="DateTimeFormat" Value="G"/>
+	<Setting Id="IsWritingToFileEnabled" Value="false"/>
+	<Setting Id="IsWritingEachTabEnabled" Value="true"/>
+  
+  <Colors>
+    <Color Type="CODE_FLOW">#666666</Color> 
+    <Color Type="ERROR">Red</Color> 
+    <Color Type="CRITICAL_ERROR">DarkRed</Color> 
+  </Colors>
+</Settings>

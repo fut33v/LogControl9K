@@ -1,0 +1,46 @@
+﻿<Window x:Class="LogControl9K.Windows.DebugWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:debugWindowNamespace="clr-namespace:LogControl9K.Windows.DebugWindowNamespace"
+        Title="DebugWindow" Height="500" Width="500">
+    <Grid>
+        <Grid.DataContext>
+            <debugWindowNamespace:DebugViewModel />
+        </Grid.DataContext>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition />
+        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition />
+                <ColumnDefinition />
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <Grid Width="150" HorizontalAlignment="Left">
+                    <Label HorizontalAlignment="Left">start:</Label>
+                    <TextBox HorizontalAlignment="Right" Width="100" Text="{Binding Start}" />
+                </Grid>
+                <Grid Width="150" HorizontalAlignment="Left">
+                    <Label HorizontalAlignment="Left">end:</Label>
+                    <TextBox HorizontalAlignment="Right" Width="100" Text="{Binding End}" />
+                </Grid>
+                <Button Width="100" Command="{Binding ShowTempFileContentsCommand}">Show</Button>
+            </StackPanel>
+            <StackPanel Grid.Column="1" >
+                <Button Command="{Binding HowMuchEntriesCommand}">How much entries?</Button>  
+                <Label Content="{Binding HowMuchEntries}"></Label>
+            </StackPanel>
+        </Grid>
+        <DataGrid Grid.Row="1" ItemsSource="{Binding Collection}" AutoGenerateColumns="False" IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Line number" Binding="{Binding Item1}" />
+                <DataGridTextColumn Header="ID" FontWeight="Bold" Binding="{Binding Item2.ID}" />
+                <DataGridTextColumn Binding="{Binding Item2.Message}" />
+                <DataGridTextColumn Binding="{Binding Item2.Time}" />
+                <DataGridTextColumn Binding="{Binding Item2.Type}" />
+            </DataGrid.Columns>
+
+        </DataGrid>
+    </Grid>
+</Window>

@@ -1,0 +1,7 @@
+<?xml version='1.0'?>        
+<Settings>
+	<Setting Id="Folder" Value="loggs"/>
+	<Setting Id="DateTimeFormat" Value="G"/>
+	<Setting Id="IsWritingToFileEnabled" Value="true"/>
+	<Setting Id="IsWritingEachTabEnabled" Value="false"/>	
+</Settings>
